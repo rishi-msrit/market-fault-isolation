@@ -1,0 +1,5 @@
+# Force Unix line endings for shell scripts used in Linux containers
+*.sh text eol=lf
+
+# Force Unix line endings for SQL files
+*.sql text eol=lf

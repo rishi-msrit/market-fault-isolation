@@ -1,0 +1,46 @@
+services:
+  pg-primary:
+    image: postgres:16
+    container_name: mfi-pg-primary
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: marketdata
+    command: >
+      postgres
+        -c wal_level=replica
+        -c max_wal_senders=5
+        -c max_replication_slots=5
+        -c hot_standby=on
+        -c wal_keep_size=64
+    volumes:
+      - pg_primary_data:/var/lib/postgresql/data
+      - ./primary/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  pg-replica:
+    image: postgres:16
+    container_name: mfi-pg-replica
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGPASSWORD: replicator_pass
+    volumes:
+      - pg_replica_data:/var/lib/postgresql/data
+      - ./replica/setup.sh:/docker-entrypoint.sh
+    entrypoint: ["/bin/bash", "/docker-entrypoint.sh"]
+    ports:
+      - "5433:5432"
+    depends_on:
+      pg-primary:
+        condition: service_healthy
+
+volumes:
+  pg_primary_data:
+  pg_replica_data:
