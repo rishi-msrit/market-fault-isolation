@@ -191,24 +191,140 @@ html, body, #root {
   padding: 24px 28px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  max-width: 1400px;
+  gap: 20px;
+  max-width: 1500px;
   width: 100%;
   margin: 0 auto;
 }
 
+/* Two-column page layout */
+.page-columns {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 20px;
+  align-items: start;
+}
 
-/* Card grid */
+.col-main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.col-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 72px;
+}
+
+.sidebar-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-card);
+}
+
+/* System status stack */
+.status-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 13px;
+}
+
+.status-row:last-child {
+  border-bottom: none;
+}
+
+.status-key {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+
+.status-val {
+  font-weight: 600;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+}
+
+/* Inline infotip */
+.infotip-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+}
+
+.infotip-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 11px;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  vertical-align: middle;
+  padding: 0;
+  transition: border-color var(--transition), color var(--transition);
+  line-height: 1;
+}
+
+.infotip-btn:hover {
+  border-color: #6366f1;
+  color: #818cf8;
+}
+
+.infotip-bubble {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 50;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  width: 260px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+@media (max-width: 960px) {
+  .page-columns { grid-template-columns: 1fr; }
+  .col-sidebar { position: static; }
+}
+
+
+/* Card grid — 2x2 in main column */
 .fault-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 14px;
 }
 
-@media (max-width: 900px) {
-  .fault-grid { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 540px) {
+@media (max-width: 600px) {
   .fault-grid { grid-template-columns: 1fr; }
 }
 
@@ -403,17 +519,7 @@ html, body, #root {
   to { left: 100%; }
 }
 
-/* Bottom row */
-.bottom-row {
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 16px;
-  align-items: start;
-}
-
-@media (max-width: 860px) {
-  .bottom-row { grid-template-columns: 1fr; }
-}
+/* Legacy bottom-row removed — now handled by page-columns */
 
 /* Timeline */
 .timeline-panel {

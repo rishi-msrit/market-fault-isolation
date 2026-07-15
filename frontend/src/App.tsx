@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import './index.css';
 import { FaultStateCard } from './components/FaultStateCard';
 import { PipelineFlow } from './components/PipelineFlow';
@@ -77,7 +77,39 @@ const FAULT_CONFIGS = [
   },
 ];
 
-// ── Info Modal ─────────────────────────────────────────────────────────────
+// ── Inline tooltip ──────────────────────────────────────────────────────────
+function InfoTip({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handle(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, []);
+
+  return (
+    <div className="infotip-wrap" ref={ref}>
+      <button
+        className="infotip-btn"
+        onClick={() => setOpen(o => !o)}
+        aria-label="More info"
+        title="What does this section do?"
+      >
+        ℹ
+      </button>
+      {open && (
+        <div className="infotip-bubble">
+          {text}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── About Modal ─────────────────────────────────────────────────────────────
 function InfoModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -89,26 +121,24 @@ function InfoModal({ onClose }: { onClose: () => void }) {
         <div className="modal-body">
           <p className="modal-lead">
             This is a <strong>market data fault isolation system</strong> — a live demo
-            of a pattern used inside stock exchanges and financial data vendors to tell
-            apart four distinct failure conditions that would otherwise all look like
-            "the system is down."
+            that shows how a monitoring system can tell apart four completely different
+            failure conditions that would otherwise all look like "the system is down."
           </p>
 
-          <h3>The real-world problem</h3>
+          <h3>The problem it solves</h3>
           <p>
-            At companies like NSE, BSE, LSEG, or CME, price feeds from brokers stream
-            thousands of ticks per second into databases. When the monitoring dashboard
-            goes dark, an on-call engineer needs to know within seconds whether the
-            upstream data vendor stopped sending, the database crashed, the consumer
-            fell behind under load, or timestamps got corrupted — because each of those
-            has a completely different fix.
+            In any real-time data pipeline — financial or otherwise — multiple layers
+            can fail independently: the data source goes silent, the database crashes,
+            the consumer falls behind under load, or the data arrives but with corrupted
+            timestamps. A system that only shows a generic red alert is useless on-call.
+            You need to know <em>which layer</em> broke and <em>why</em>.
           </p>
 
           <h3>What you're looking at</h3>
           <ul>
             <li>
               <strong>Feed Generator</strong> — a background thread emitting synthetic
-              price ticks for 18 symbols every 500ms, simulating a real market feed.
+              price ticks for 18 symbols every 500ms, simulating a real-time market feed.
             </li>
             <li>
               <strong>Ingestion Loop</strong> — an async consumer that drains the tick
@@ -116,11 +146,11 @@ function InfoModal({ onClose }: { onClose: () => void }) {
             </li>
             <li>
               <strong>Health Checker</strong> — runs every 3 seconds, evaluating four
-              independent conditions. Each has its own trigger and reason string.
+              independent conditions. Each has its own trigger threshold and reason string.
             </li>
             <li>
               <strong>This dashboard</strong> — polls the backend every 2 seconds and
-              renders the current state with a color-coded card per fault type.
+              renders the current state with a colour-coded card per fault type.
             </li>
           </ul>
 
@@ -130,7 +160,7 @@ function InfoModal({ onClose }: { onClose: () => void }) {
               <span className="mf-dot" style={{ background: '#f59e0b' }} />
               <div>
                 <strong>Feed Dead</strong>
-                <span>No tick received in 10s. The data vendor went silent.</span>
+                <span>No tick received in 10 seconds. The data source went silent.</span>
               </div>
             </div>
             <div className="modal-fault">
@@ -151,21 +181,22 @@ function InfoModal({ onClose }: { onClose: () => void }) {
               <span className="mf-dot" style={{ background: '#a855f7' }} />
               <div>
                 <strong>Data Stale</strong>
-                <span>Last written tick is 30s+ old. Feed is up, but timestamps are corrupted.</span>
+                <span>Last written tick is 30s+ old. Data is arriving but timestamps are corrupted.</span>
               </div>
             </div>
           </div>
 
-          <h3>How to use the control panel</h3>
+          <h3>How to use it</h3>
           <p>
             Use the <strong>Fault Injection</strong> panel on the right to trigger any
-            failure scenario. Each red button causes exactly one fault state to activate.
-            The matching green button resolves it — no service restart needed. Watch the
-            State Transition Log record each event with a timestamp and reason.
+            scenario. Each button causes exactly one fault state to activate. The matching
+            green button resolves it — no service restart required. The{' '}
+            <strong>State Transition Log</strong> records every event with a timestamp
+            and the exact reason string from the health checker.
           </p>
 
           <div className="modal-footer-note">
-            Built with FastAPI · asyncpg · PostgreSQL (Neon) · React · Vite
+            FastAPI · asyncpg · PostgreSQL (Neon) · React · Vite · Deployed on Render + Vercel
           </div>
         </div>
       </div>
@@ -217,7 +248,7 @@ export default function App() {
       <header className="app-header">
         <div className="header-left">
           <div className="header-logo">
-            <span className="logo-mark">◈</span>
+            <span>◈</span>
           </div>
           <div>
             <h1>Market Fault Isolation</h1>
@@ -246,7 +277,10 @@ export default function App() {
           >
             {darkMode ? '☀️' : '🌙'}
           </button>
-          <div className={`status-dot ${fetchError || anyFault ? 'error' : ''}`} title={anyFault ? 'Active fault detected' : 'All systems healthy'} />
+          <div
+            className={`status-dot ${fetchError || anyFault ? 'error' : ''}`}
+            title={anyFault ? 'Active fault detected' : 'All systems healthy'}
+          />
         </div>
       </header>
 
@@ -256,13 +290,19 @@ export default function App() {
             <div className="loading-spinner" />
             <div className="loading-title">Connecting to backend</div>
             <div className="loading-sub">{API}</div>
-            <div className="loading-note">First load on the free tier may take 30–60 seconds to warm up.</div>
+            <div className="loading-note">
+              First load on the free tier may take 30–60 seconds to wake up.
+            </div>
           </div>
         ) : (
           <>
+            {/* ── Intro banner ── */}
             <div className="intro-banner">
               <div className="intro-text">
-                <span className="intro-highlight">What this is:</span> A simulated stock-price pipeline you can deliberately break. Each panel below tracks a different failure condition independently — use the Fault Injection panel to trigger one and watch the system identify exactly which layer failed.
+                <span className="intro-highlight">What this is:</span> A simulated
+                data pipeline you can deliberately break. Each panel tracks a different
+                failure condition independently — trigger one from the right panel and
+                watch the system identify exactly which layer failed.
               </div>
               <div className="intro-tags">
                 <span className="tag">Python / FastAPI</span>
@@ -272,81 +312,118 @@ export default function App() {
               </div>
             </div>
 
-            <div>
-              <div className="section-label">
-                Fault States
-                <span className="section-hint"> — each is computed independently. A green card means that condition is not present, even if others are active.</span>
-              </div>
-              <div className="fault-grid">
-                {FAULT_CONFIGS.map((cfg) => (
-                  <FaultStateCard
-                    key={cfg.key}
-                    id={cfg.id}
-                    title={cfg.title}
-                    description={cfg.description}
-                    icon={cfg.icon}
-                    color={cfg.color}
-                    colorDim={cfg.colorDim}
-                    fault={status.fault_states[cfg.key]}
+            {/* ── Two-column layout ── */}
+            <div className="page-columns">
+
+              {/* LEFT — fault cards, pipeline, timeline */}
+              <div className="col-main">
+
+                <div>
+                  <div className="section-label">
+                    Fault States
+                    <InfoTip text="Four independent health checks run every 3 seconds. Each has its own condition — a green card means that specific fault is not present, even if other faults are active at the same time." />
+                  </div>
+                  <div className="fault-grid">
+                    {FAULT_CONFIGS.map((cfg) => (
+                      <FaultStateCard
+                        key={cfg.key}
+                        id={cfg.id}
+                        title={cfg.title}
+                        description={cfg.description}
+                        icon={cfg.icon}
+                        color={cfg.color}
+                        colorDim={cfg.colorDim}
+                        fault={status.fault_states[cfg.key]}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="section-label">
+                    Pipeline Flow
+                    <InfoTip text="Shows the live path a price tick takes from the market feed through the queue, ingestion loop, and into the database. Each node highlights its fault colour when that layer has an active fault." />
+                  </div>
+                  <PipelineFlow
+                    faults={status.fault_states}
+                    meta={status.meta}
                   />
-                ))}
-              </div>
-            </div>
-
-            <PipelineFlow
-              faults={status.fault_states}
-              meta={status.meta}
-            />
-
-            <div className="meta-bar" title="Live system stats, polled every 2 seconds">
-              <div className="meta-bar-item">
-                <span className="label">queue depth</span>
-                <span className="value" style={{ color: status.meta.queue_depth > 50 ? '#eab308' : 'inherit' }}>
-                  {status.meta.queue_depth}
-                </span>
-              </div>
-              <div className="meta-bar-item">
-                <span className="label">feed mode</span>
-                <span className="value" style={{ color: status.meta.feed_mode !== 'NORMAL' ? '#f59e0b' : 'inherit' }}>
-                  {status.meta.feed_mode}
-                </span>
-              </div>
-              <div className="meta-bar-item">
-                <span className="label">db write target</span>
-                <span className="value">{status.meta.db_active}</span>
-              </div>
-              <div className="meta-bar-item">
-                <span className="label">primary</span>
-                <span className="value" style={{ color: status.meta.primary_up ? '#10b981' : '#ef4444' }}>
-                  {status.meta.primary_up ? 'up' : 'down'}
-                </span>
-              </div>
-              <div className="meta-bar-item">
-                <span className="label">replica</span>
-                <span className="value" style={{ color: status.meta.replica_up ? '#10b981' : 'var(--text-muted)' }}>
-                  {status.meta.replica_up ? 'up' : 'none'}
-                </span>
-              </div>
-              <div className="meta-bar-item">
-                <span className="label">last tick</span>
-                <span className="value">{status.meta.last_tick_received_ago_s}s ago</span>
-              </div>
-            </div>
-
-            <div className="bottom-row">
-              <div>
-                <div className="section-label">
-                  State Transition Log
-                  <span className="section-hint"> — every fault activation and recovery is logged here with the exact reason from the health checker.</span>
                 </div>
-                <Timeline history={status.history} />
-              </div>
-              <div>
-                <div className="section-label">
-                  Fault Injection
-                  <span className="section-hint"> — trigger each scenario without touching the terminal.</span>
+
+                <div>
+                  <div className="section-label">
+                    State Transition Log
+                    <InfoTip text="Every time a fault activates or clears, one entry is appended here with a UTC timestamp and the exact reason string from the health checker. Resets on service restart." />
+                  </div>
+                  <Timeline history={status.history} />
                 </div>
-                <ControlPanel />
+
+              </div>
+
+              {/* RIGHT SIDEBAR — system status + fault injection */}
+              <div className="col-sidebar">
+
+                <div className="sidebar-section">
+                  <div className="section-label">
+                    System Status
+                    <InfoTip text="Live stats polled from the backend every 2 seconds. Queue depth and feed mode change colour when they indicate a problem." />
+                  </div>
+                  <div className="status-stack">
+                    <div className="status-row">
+                      <span className="status-key">queue depth</span>
+                      <span
+                        className="status-val"
+                        style={{ color: status.meta.queue_depth > 50 ? '#eab308' : 'var(--color-healthy)' }}
+                      >
+                        {status.meta.queue_depth}
+                      </span>
+                    </div>
+                    <div className="status-row">
+                      <span className="status-key">feed mode</span>
+                      <span
+                        className="status-val"
+                        style={{ color: status.meta.feed_mode !== 'NORMAL' ? '#f59e0b' : 'var(--color-healthy)' }}
+                      >
+                        {status.meta.feed_mode}
+                      </span>
+                    </div>
+                    <div className="status-row">
+                      <span className="status-key">db write target</span>
+                      <span className="status-val">{status.meta.db_active}</span>
+                    </div>
+                    <div className="status-row">
+                      <span className="status-key">primary</span>
+                      <span
+                        className="status-val"
+                        style={{ color: status.meta.primary_up ? '#10b981' : '#ef4444' }}
+                      >
+                        {status.meta.primary_up ? 'up' : 'down'}
+                      </span>
+                    </div>
+                    <div className="status-row">
+                      <span className="status-key">replica</span>
+                      <span
+                        className="status-val"
+                        style={{ color: status.meta.replica_up ? '#10b981' : 'var(--text-muted)' }}
+                      >
+                        {status.meta.replica_up ? 'up' : 'none'}
+                      </span>
+                    </div>
+                    <div className="status-row">
+                      <span className="status-key">last tick</span>
+                      <span className="status-val">{status.meta.last_tick_received_ago_s}s ago</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="sidebar-section">
+                  <div className="section-label">
+                    Fault Injection
+                    <InfoTip text="Trigger any failure scenario without touching the terminal. Red buttons cause exactly one fault state to activate. Green buttons resolve it — no service restart needed." />
+                  </div>
+                  <ControlPanel />
+                </div>
+
               </div>
             </div>
           </>

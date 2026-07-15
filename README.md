@@ -18,21 +18,21 @@ The point of the demo is not just to see errors. It is to show that the system *
 
 ## For a first-time visitor (non-technical)
 
-Think of a stock exchange like NSE or BSE. Every second, thousands of buy/sell prices are streaming from brokers into databases. If something breaks — say the database goes down or the data feed from brokers stops — the exchange's internal monitoring system needs to figure out *exactly* what went wrong, not just flash a generic red screen.
+Imagine a live data pipeline — prices or messages streaming continuously from an external source into a database. When something goes wrong in that pipeline, you get a red screen. But which part broke? The source stopped sending? The database is down? The system is receiving data too fast to process? The data is arriving with wrong timestamps?
 
-This project simulates that pipeline at a small scale:
+This project simulates exactly that scenario at a small scale:
 - A fake "market feed" generates price updates for 18 stock symbols every half second
-- A backend service receives those updates and writes them to a database
-- A health checker watches the whole pipeline every 3 seconds
-- A dashboard shows you exactly which part is broken when you deliberately break it
+- A backend service picks up those updates and writes them to a database
+- A health checker runs every 3 seconds, checking each layer separately
+- A dashboard shows you exactly which part is broken — with a reason — when you deliberately break it
 
-You can use the control panel on the dashboard to simulate four real-world failures:
-1. **Kill the feed** — like a data vendor going offline
-2. **Kill the database** — like a primary server crashing
-3. **Slow the consumer** — like a network bottleneck causing the pipeline to fall behind
-4. **Corrupt timestamps** — like a clock synchronisation failure producing stale data
+You can trigger four real-world failures from the control panel:
+1. **Kill the feed** — the data source stops sending anything
+2. **Kill the database** — writes start failing
+3. **Slow the consumer** — the pipeline falls behind and a backlog builds up
+4. **Corrupt timestamps** — data is arriving, but the timestamps in it are wrong
 
-Each failure lights up a different colored indicator on the dashboard with a plain-English explanation of what went wrong.
+Each failure lights up a different coloured panel with a plain-English explanation of what went wrong.
 
 ## What problem this solves
 
