@@ -1,5 +1,9 @@
 # Market Data Fault Isolation & Recovery System
 
+**[Live Demo](https://market-fault-isolation.vercel.app)** · **[Backend API](https://market-fault-isolation-backend.onrender.com/docs)** · **[GitHub](https://github.com/rishi-msrit/market-fault-isolation)**
+
+> ⚠️ The backend runs on Render's free tier and sleeps after 15 minutes of inactivity. First load may take 30–60 seconds to wake up — this is normal. The dashboard shows a spinner while it connects.
+
 A simulated stock-price ingestion pipeline built to demonstrate **fault isolation**: detecting and distinguishing four different failure conditions independently, rather than collapsing them into a single "system down" alert. This is the core problem in real financial data infrastructure — when a dashboard goes dark, you need to know *why* immediately.
 
 ## What you see on the live site
