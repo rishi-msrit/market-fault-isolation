@@ -50,33 +50,25 @@ function InfoModal({ onClose }: { onClose: () => void }) {
         </div>
         <div className="modal-body">
           <p className="modal-lead">
-            A simulated market data pipeline you can deliberately break. Each of the four fault states
-            tracks a <strong>different failure layer independently</strong> — the goal is to demonstrate
-            that when a system goes dark, you can know exactly <em>which layer failed</em> and why.
+            A simulated market data pipeline designed to test fault isolation. Trigger failures to see how independent checks detect issues at specific layers.
           </p>
 
-          <h3>The problem it solves</h3>
+          <h3>How it works</h3>
           <p>
-            In real-time financial data pipelines, multiple layers can fail independently: the data
-            source goes silent, the database crashes, the consumer falls behind, or data arrives with
-            corrupted timestamps. A generic "system down" alert is useless on-call. You need to know
-            which layer broke and why — within seconds.
+            Real-time data feeds fail in different ways. Data sources go silent, databases crash, or queue lag grows. This dashboard isolates each failure mode so you know the exact layer that broke.
           </p>
 
-          <h3>How to use it</h3>
+          <h3>Getting Started</h3>
           <p>
-            Start on the <strong>Interactive Pipeline</strong> tab. Use the Fault Injection panel to
-            trigger a failure, then watch the Data Flow diagram break at the correct layer. Switch to
-            <strong> Health Monitoring</strong> to see the independent fault state cards. Check
-            <strong> System Audit Log</strong> for the full transition history.
+            Use the <strong>Interactive Pipeline</strong> tab to inject failures and watch the diagram break. Monitor active conditions under <strong>Health Monitoring</strong>, and view history in the <strong>System Audit Log</strong>.
           </p>
 
           <div className="modal-faults">
             {[
-              { color: '#f59e0b', name: 'Feed Dead', desc: 'No tick in 10s. Data source went silent.' },
-              { color: '#ef4444', name: 'DB Unreachable', desc: 'Primary pool closed. Writes failing.' },
-              { color: '#eab308', name: 'Ingestion Lagging', desc: 'Queue > 50. Consumer cannot keep up.' },
-              { color: '#a855f7', name: 'Data Stale', desc: 'Last tick 30s+ old. Silent corruption.' },
+              { color: '#f59e0b', name: 'Feed Dead', desc: 'No tick received in 10 seconds.' },
+              { color: '#ef4444', name: 'DB Unreachable', desc: 'PostgreSQL connection pool is down.' },
+              { color: '#eab308', name: 'Ingestion Lagging', desc: 'Consumer queue exceeds 50 items.' },
+              { color: '#a855f7', name: 'Data Stale', desc: 'Silent corruption: ticks arrive backdated.' },
             ].map(f => (
               <div className="modal-fault" key={f.name}>
                 <span className="mf-dot" style={{ background: f.color }} />
@@ -89,7 +81,7 @@ function InfoModal({ onClose }: { onClose: () => void }) {
           </div>
 
           <div className="modal-footer-note">
-            FastAPI · asyncpg · PostgreSQL (Neon) · React · Vite · Render + Vercel
+            FastAPI · asyncpg · PostgreSQL · React · Vite
           </div>
         </div>
       </div>

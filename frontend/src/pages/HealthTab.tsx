@@ -74,10 +74,9 @@ export function HealthTab({ status }: Props) {
   return (
     <div className="health-tab">
       <div className="tab-section-header">
-        <h2 className="tab-section-title">Health Monitoring Matrix</h2>
-        <p className="tab-section-desc">
-          Four independent checks, each evaluated every 3s — no fault masks another. Click (i) for the threshold.
-        </p>
+        <h2 className="tab-section-title">
+          Health Monitoring Matrix <span className="tab-section-subtitle">Four independent checks evaluated every 3s. Click (i) for details.</span>
+        </h2>
         {activeFaults.length > 0 && (
           <div className="health-alert-banner">
             {activeFaults.length} fault{activeFaults.length > 1 ? 's' : ''} currently active:{' '}

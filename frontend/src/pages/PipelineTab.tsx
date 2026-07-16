@@ -41,10 +41,9 @@ export function PipelineTab({ status }: Props) {
       {/* ── Data Flow first ── */}
       <div className="tab-section">
         <div className="tab-section-header">
-          <h2 className="tab-section-title">Data Flow</h2>
-          <p className="tab-section-desc">
-            Green lines = active flow. Broken connectors highlight exactly which layer the fault hit.
-          </p>
+          <h2 className="tab-section-title">
+            Data Flow <span className="tab-section-subtitle">Green line = active flow. Broken connectors highlight failures.</span>
+          </h2>
         </div>
         <PipelineFlow faults={status.fault_states} meta={status.meta} />
       </div>
@@ -52,10 +51,9 @@ export function PipelineTab({ status }: Props) {
       {/* ── Fault Injection below ── */}
       <div className="tab-section">
         <div className="tab-section-header">
-          <h2 className="tab-section-title">Fault Injection</h2>
-          <p className="tab-section-desc">
-            Trigger a real backend failure above — watch the pipeline react. No restart needed to recover.
-          </p>
+          <h2 className="tab-section-title">
+            Fault Injection <span className="tab-section-subtitle">Trigger live backend failures to test pipeline resilience.</span>
+          </h2>
         </div>
         <ControlPanel />
       </div>

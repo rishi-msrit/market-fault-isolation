@@ -24,10 +24,9 @@ export function AuditTab({ status }: Props) {
   return (
     <div className="audit-tab">
       <div className="tab-section-header">
-        <h2 className="tab-section-title">System Audit Log</h2>
-        <p className="tab-section-desc">
-          Every fault transition recorded with timestamp and exact reason from the health checker.
-        </p>
+        <h2 className="tab-section-title">
+          System Audit Log <span className="tab-section-subtitle">Real-time log of state transitions and failure reasons.</span>
+        </h2>
       </div>
       <Timeline history={status.history} />
     </div>

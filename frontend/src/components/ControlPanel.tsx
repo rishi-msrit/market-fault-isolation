@@ -58,7 +58,7 @@ export function ControlPanel() {
         const text = await res.text();
         setFeedback({ message: `Error: ${text}`, error: true });
       } else {
-        setFeedback({ message: 'Command sent — health check updates in 3s', error: false });
+        setFeedback({ message: 'Command sent successfully', error: false });
       }
     } catch (e) {
       setFeedback({ message: `Request failed: ${String(e)}`, error: true });
@@ -67,86 +67,90 @@ export function ControlPanel() {
   }
 
   return (
-    <div className="injection-panel">
-      <div className="injection-groups">
+    <div className="injection-panel-flat">
+      <div className="injection-grid-6">
+        
+        {/* Tile 1: Stop Feed */}
+        <CtrlBtn
+          id="ctrl-stop-feed"
+          className="destructive"
+          onClick={() => post('/admin/fault', { mode: 'STOPPED' })}
+          icon={<StopSquareIcon size={14} />}
+          label="Stop Feed"
+          description="Halts real-time price tick generation."
+          trigger="Feed Dead"
+          triggerColor="#f59e0b"
+        />
 
-        {/* Feed group */}
-        <div className="injection-group">
-          <div className="injection-group-label">Feed Controls</div>
-          <div className="injection-group-buttons">
-            <CtrlBtn
-              id="ctrl-stop-feed"
-              className="destructive"
-              onClick={() => post('/admin/fault', { mode: 'STOPPED' })}
-              icon={<StopSquareIcon size={15} />}
-              label="Stop Feed"
-              description="Halts tick generation — triggers Feed Dead after 10s"
-              trigger="Feed Dead"
-              triggerColor="#f59e0b"
-            />
-            <CtrlBtn
-              id="ctrl-slow-consumer"
-              className="destructive"
-              onClick={() => post('/admin/slow-consumer')}
-              icon={<HourglassIcon size={15} />}
-              label="Slow Consumer"
-              description="Adds 2s write delay — fills queue past 50, triggers Ingestion Lagging"
-              trigger="Ingestion Lagging"
-              triggerColor="#eab308"
-            />
-            <CtrlBtn
-              id="ctrl-corrupt-ts"
-              className="destructive"
-              onClick={() => post('/admin/fault', { mode: 'CORRUPT_TIMESTAMP' })}
-              icon={<AlertTriangleIcon size={15} />}
-              label="Corrupt Timestamps"
-              description="Backdates each tick 10 min — triggers Data Stale after 30s"
-              trigger="Data Stale"
-              triggerColor="#a855f7"
-            />
-            <div className="injection-divider" />
-            <CtrlBtn
-              id="ctrl-resume-feed"
-              className="recover"
-              onClick={() => post('/admin/fault', { mode: 'NORMAL' })}
-              icon={<PlayIcon size={15} />}
-              label="Resume Feed"
-              description="Returns feed to normal mode — clears Feed Dead and Data Stale"
-            />
-            <CtrlBtn
-              id="ctrl-clear-lag"
-              className="recover"
-              onClick={() => post('/admin/normal-consumer')}
-              icon={<SkipForwardIcon size={15} />}
-              label="Clear Consumer Lag"
-              description="Removes write delay — queue drains, Ingestion Lagging clears"
-            />
+        {/* Tile 2: Slow Consumer */}
+        <CtrlBtn
+          id="ctrl-slow-consumer"
+          className="destructive"
+          onClick={() => post('/admin/slow-consumer')}
+          icon={<HourglassIcon size={14} />}
+          label="Slow Consumer"
+          description="Adds 2s database write delay."
+          trigger="Ingestion Lagging"
+          triggerColor="#eab308"
+        />
+
+        {/* Tile 3: Corrupt Timestamps */}
+        <CtrlBtn
+          id="ctrl-corrupt-ts"
+          className="destructive"
+          onClick={() => post('/admin/fault', { mode: 'CORRUPT_TIMESTAMP' })}
+          icon={<AlertTriangleIcon size={14} />}
+          label="Corrupt Timestamps"
+          description="Backdates ticks by 10 minutes."
+          trigger="Data Stale"
+          triggerColor="#a855f7"
+        />
+
+        {/* Tile 4: Resume Feed */}
+        <CtrlBtn
+          id="ctrl-resume-feed"
+          className="recover"
+          onClick={() => post('/admin/fault', { mode: 'NORMAL' })}
+          icon={<PlayIcon size={14} />}
+          label="Resume Feed"
+          description="Restores normal feed generation rate."
+        />
+
+        {/* Tile 5: Clear Consumer Lag */}
+        <CtrlBtn
+          id="ctrl-clear-lag"
+          className="recover"
+          onClick={() => post('/admin/normal-consumer')}
+          icon={<SkipForwardIcon size={14} />}
+          label="Clear Consumer Lag"
+          description="Removes database write delay."
+        />
+
+        {/* Tile 6: Database Controls (Combined) */}
+        <div className="db-controls-tile">
+          <div className="db-tile-header">
+            <span className="db-tile-title">Database Pool</span>
+            <span className="ctrl-btn-trigger db-trigger" style={{ color: '#ef4444', borderColor: '#ef4444', background: '#ef444418' }}>
+              DB Unreachable
+            </span>
           </div>
-        </div>
-
-        {/* Database group */}
-        <div className="injection-group">
-          <div className="injection-group-label">Database Controls</div>
-          <div className="injection-group-buttons">
-            <CtrlBtn
+          <div className="db-tile-buttons">
+            <button
               id="ctrl-kill-primary"
-              className="destructive"
+              className="db-sub-btn destructive"
               onClick={() => post('/admin/kill-primary')}
-              icon={<PowerIcon size={15} />}
-              label="Kill Primary DB"
-              description="Closes the asyncpg connection pool — triggers DB Unreachable"
-              trigger="DB Unreachable"
-              triggerColor="#ef4444"
-            />
-            <div className="injection-divider" />
-            <CtrlBtn
+            >
+              <PowerIcon size={13} />
+              Kill
+            </button>
+            <button
               id="ctrl-restore-primary"
-              className="recover"
+              className="db-sub-btn recover"
               onClick={() => post('/admin/restore-primary')}
-              icon={<RefreshIcon size={15} />}
-              label="Restore Primary DB"
-              description="Re-opens the connection pool — DB Unreachable clears on next check"
-            />
+            >
+              <RefreshIcon size={13} />
+              Restore
+            </button>
           </div>
         </div>
 
