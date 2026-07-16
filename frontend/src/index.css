@@ -96,7 +96,7 @@ html, body, #root {
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
-  height: 46px;
+  height: 54px;
   flex-shrink: 0;
   background: var(--bg-surface);
   border-bottom: 1px solid var(--border);
@@ -110,8 +110,8 @@ html, body, #root {
 }
 
 .header-logo {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: var(--radius-sm);
   background: linear-gradient(135deg, #3730a3, #5b21b6);
   display: flex;
@@ -130,14 +130,14 @@ html, body, #root {
 
 .header-title {
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--text-primary);
 }
 
 .header-sub {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-muted);
   font-family: var(--font-mono);
 }
@@ -307,7 +307,7 @@ html, body, #root {
 
 .sidebar-toggle {
   position: absolute;
-  top: 10px;
+  top: 13px;
   right: 12px;
   width: 28px;
   height: 28px;
@@ -326,7 +326,7 @@ html, body, #root {
 
 .sidebar.collapsed .sidebar-toggle {
   right: 10px;
-  top: 8px;
+  top: 11px;
 }
 
 .sidebar-toggle:hover {
@@ -335,7 +335,7 @@ html, body, #root {
 }
 
 .sidebar-content {
-  padding: 48px 18px 20px;
+  padding: 54px 18px 20px;
   overflow-y: auto;
   flex: 1;
   scrollbar-width: thin;
@@ -414,7 +414,7 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-top: 48px;
+  padding-top: 54px;
 }
 
 .sidebar-mini-dot {
@@ -505,7 +505,7 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   gap: 32px;
-  max-width: 1100px;
+  max-width: 100%;
 }
 
 .tab-section {
@@ -519,7 +519,7 @@ html, body, #root {
    ────────────────────────────────────────────────────────────────────────── */
 .health-tab {
   padding: 28px 32px;
-  max-width: 1000px;
+  max-width: 100%;
 }
 
 .health-grid {
@@ -709,7 +709,7 @@ html, body, #root {
    ────────────────────────────────────────────────────────────────────────── */
 .audit-tab {
   padding: 28px 32px;
-  max-width: 1100px;
+  max-width: 100%;
 }
 
 .audit-timeline {
@@ -852,7 +852,7 @@ html, body, #root {
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
   background: var(--bg-elevated);
-  min-width: 150px;
+  min-width: 170px;
   flex-shrink: 0;
   transition: border-color 250ms ease, box-shadow 250ms ease;
 }
@@ -902,13 +902,13 @@ html, body, #root {
   flex-direction: column;
   align-items: center;
   flex: 1;
-  min-width: 80px;
+  min-width: 160px;
   gap: 5px;
   padding: 0 4px;
 }
 
 .connector-label-top {
-  font-size: 9px;
+  font-size: 10.5px;
   color: var(--text-muted);
   font-family: var(--font-mono);
   text-align: center;
@@ -916,7 +916,7 @@ html, body, #root {
 }
 
 .connector-label-bottom {
-  font-size: 9px;
+  font-size: 10.5px;
   color: var(--text-muted);
   font-family: var(--font-mono);
   text-align: center;

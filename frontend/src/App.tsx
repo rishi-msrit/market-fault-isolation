@@ -66,7 +66,7 @@ function InfoModal({ onClose }: { onClose: () => void }) {
           <div className="modal-faults">
             {[
               { color: '#f59e0b', name: 'Feed Dead', desc: 'No tick received in 10 seconds.' },
-              { color: '#ef4444', name: 'DB Unreachable', desc: 'PostgreSQL connection pool is down.' },
+              { color: '#ef4444', name: 'DB Unreachable', desc: 'Database connection pool is down.' },
               { color: '#eab308', name: 'Ingestion Lagging', desc: 'Consumer queue exceeds 50 items.' },
               { color: '#a855f7', name: 'Data Stale', desc: 'Silent corruption: ticks arrive backdated.' },
             ].map(f => (
@@ -81,7 +81,7 @@ function InfoModal({ onClose }: { onClose: () => void }) {
           </div>
 
           <div className="modal-footer-note">
-            FastAPI · asyncpg · PostgreSQL · React · Vite
+            FastAPI · asyncpg · Database · React · Vite
           </div>
         </div>
       </div>
@@ -184,7 +184,7 @@ export default function App() {
         <span className="footer-sep">·</span>
         <a href="https://github.com/rishi-msrit/market-fault-isolation" target="_blank" rel="noopener noreferrer">GitHub</a>
         <span className="footer-sep">·</span>
-        <span>FastAPI · PostgreSQL · React</span>
+        <span>FastAPI · Database · React</span>
       </footer>
     </div>
   );

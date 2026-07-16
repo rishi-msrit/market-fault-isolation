@@ -141,7 +141,7 @@ export function PipelineFlow({ faults, meta }: Props) {
         {/* Connector 3 — Ingestion → DB */}
         <Connector
           topLabel="asyncpg write + ts check"
-          bottomLabel="PostgreSQL"
+          bottomLabel="Database"
           broken={faults.db_unreachable.active || faults.data_stale.active}
           faultColor={faults.db_unreachable.active ? '#ef4444' : '#a855f7'}
           flowing={!anyFault}
@@ -157,7 +157,7 @@ export function PipelineFlow({ faults, meta }: Props) {
             <DatabaseIcon size={20} />
           </div>
           <div className="pipeline-node-body">
-            <div className="pipeline-node-label">PostgreSQL</div>
+            <div className="pipeline-node-label">Database</div>
             <div className={`pipeline-node-status ${!meta.primary_up ? 'status-error' : ''}`}>
               {meta.db_active} · {meta.primary_up ? 'up' : 'down'}
             </div>
