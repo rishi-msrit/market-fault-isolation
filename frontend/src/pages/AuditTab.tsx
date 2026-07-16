@@ -26,8 +26,7 @@ export function AuditTab({ status }: Props) {
       <div className="tab-section-header">
         <h2 className="tab-section-title">System Audit Log</h2>
         <p className="tab-section-desc">
-          Every fault state transition is recorded with a UTC timestamp and the exact reason string
-          produced by the health checker. Log resets on service restart. Newest events appear first.
+          Every fault transition recorded with timestamp and exact reason from the health checker.
         </p>
       </div>
       <Timeline history={status.history} />

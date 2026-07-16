@@ -76,9 +76,7 @@ export function HealthTab({ status }: Props) {
       <div className="tab-section-header">
         <h2 className="tab-section-title">Health Monitoring Matrix</h2>
         <p className="tab-section-desc">
-          Four independent fault conditions, each evaluated separately every 3 seconds.
-          No fault masks another — multiple can be active simultaneously.{' '}
-          Click the <strong>(i)</strong> on any card to see the exact threshold condition.
+          Four independent checks, each evaluated every 3s — no fault masks another. Click (i) for the threshold.
         </p>
         {activeFaults.length > 0 && (
           <div className="health-alert-banner">
