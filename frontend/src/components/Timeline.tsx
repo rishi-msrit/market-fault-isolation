@@ -31,25 +31,45 @@ function formatTs(iso: string): string {
 export function Timeline({ history }: Props) {
   return (
     <div className="timeline-panel">
-      <div className="timeline-header">State Transition Log</div>
+      <div className="timeline-header">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" />
+        </svg>
+        State Transitions
+      </div>
       <div className="timeline-list">
         {history.length === 0 ? (
-          <div className="timeline-empty">No transitions yet — system is initialising</div>
+          <div className="timeline-empty">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.3, marginBottom: 8 }}>
+              <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" />
+            </svg>
+            Waiting for first event
+          </div>
         ) : (
-          history.map((evt, i) => {
-            const color = evt.active
-              ? (FAULT_COLORS[evt.fault] ?? '#8a90a0')
-              : '#10b981';
-
+          [...history].reverse().map((evt, i) => {
+            const faultColor = FAULT_COLORS[evt.fault] ?? '#8a90a0';
+            const eventColor = evt.active ? faultColor : '#10b981';
             return (
               <div className="timeline-item" key={i}>
                 <div
                   className="timeline-dot"
-                  style={{ background: color, boxShadow: `0 0 4px ${color}` }}
+                  style={{ background: eventColor, boxShadow: `0 0 5px ${eventColor}` }}
                 />
                 <div className="timeline-content">
-                  <div className="timeline-fault-name">
-                    {evt.active ? '▲' : '▼'} {FAULT_LABELS[evt.fault] ?? evt.fault}
+                  <div className="timeline-top-row">
+                    <span
+                      className="timeline-badge"
+                      style={{
+                        color: faultColor,
+                        background: `${faultColor}18`,
+                        borderColor: `${faultColor}40`,
+                      }}
+                    >
+                      {FAULT_LABELS[evt.fault] ?? evt.fault}
+                    </span>
+                    <span className={`timeline-state-chip ${evt.active ? 'fault' : 'cleared'}`}>
+                      {evt.active ? 'TRIGGERED' : 'CLEARED'}
+                    </span>
                   </div>
                   <div className="timeline-reason">{evt.reason}</div>
                 </div>

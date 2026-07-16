@@ -1,3 +1,5 @@
+import { SignalIcon, DatabaseIcon, HourglassIcon, ClockIcon } from './Icons';
+
 interface FaultInfo {
   active: boolean;
   reason: string | null;
@@ -8,19 +10,33 @@ interface Props {
   id: string;
   title: string;
   description: string;
-  icon: string;
+  iconType: 'signal' | 'database' | 'hourglass' | 'clock';
   color: string;
   colorDim: string;
   fault: FaultInfo;
 }
 
-function formatSince(iso: string | null): string {
-  if (!iso) return '';
-  const d = new Date(iso);
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+function getElapsed(since: string | null): string {
+  if (!since) return '';
+  const delta = Math.floor((Date.now() - new Date(since).getTime()) / 1000);
+  if (delta < 60) return `${delta}s`;
+  const m = Math.floor(delta / 60);
+  const s = delta % 60;
+  return `${m}m ${s}s`;
 }
 
-export function FaultStateCard({ id, title, description, icon, color, colorDim, fault }: Props) {
+function FaultIcon({ iconType, size = 18 }: { iconType: Props['iconType']; size?: number }) {
+  switch (iconType) {
+    case 'signal': return <SignalIcon size={size} />;
+    case 'database': return <DatabaseIcon size={size} />;
+    case 'hourglass': return <HourglassIcon size={size} />;
+    case 'clock': return <ClockIcon size={size} />;
+  }
+}
+
+export function FaultStateCard({ id, title, description, iconType, color, colorDim, fault }: Props) {
+  const elapsed = getElapsed(fault.since);
+
   return (
     <div
       id={id}
@@ -31,7 +47,9 @@ export function FaultStateCard({ id, title, description, icon, color, colorDim, 
       }}
     >
       <div className="fault-card-header">
-        <div className="fault-card-icon">{icon}</div>
+        <div className="fault-card-icon">
+          <FaultIcon iconType={iconType} size={18} />
+        </div>
         <span className={`fault-badge ${fault.active ? 'active' : 'ok'}`}>
           {fault.active ? 'FAULT' : 'OK'}
         </span>
@@ -46,8 +64,13 @@ export function FaultStateCard({ id, title, description, icon, color, colorDim, 
         <div className="fault-card-reason">{fault.reason}</div>
       )}
 
-      {fault.active && fault.since && (
-        <div className="fault-card-since">since {formatSince(fault.since)}</div>
+      {fault.active && elapsed && (
+        <div className="fault-card-elapsed">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
+          </svg>
+          active {elapsed}
+        </div>
       )}
     </div>
   );

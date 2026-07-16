@@ -4,6 +4,16 @@ import { FaultStateCard } from './components/FaultStateCard';
 import { PipelineFlow } from './components/PipelineFlow';
 import { Timeline } from './components/Timeline';
 import { ControlPanel } from './components/ControlPanel';
+import {
+  InfoIcon,
+  SunIcon,
+  MoonIcon,
+  XIcon,
+  ActivityIcon,
+  DatabaseIcon,
+  ShieldIcon,
+  BoltIcon,
+} from './components/Icons';
 
 const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
 const POLL_INTERVAL_MS = 2000;
@@ -43,8 +53,8 @@ const FAULT_CONFIGS = [
     key: 'feed_dead' as const,
     id: 'card-feed-dead',
     title: 'Feed Dead',
-    description: 'No new ticks received past the 10-second timeout.',
-    icon: '📡',
+    description: 'No new ticks received within the 10-second timeout.',
+    iconType: 'signal' as const,
     color: '#f59e0b',
     colorDim: 'rgba(245,158,11,0.12)',
   },
@@ -52,8 +62,8 @@ const FAULT_CONFIGS = [
     key: 'db_unreachable' as const,
     id: 'card-db-unreachable',
     title: 'DB Unreachable',
-    description: 'Primary connection pool is down and no replica is available.',
-    icon: '🗄️',
+    description: 'Primary connection pool is down, no replica available.',
+    iconType: 'database' as const,
     color: '#ef4444',
     colorDim: 'rgba(239,68,68,0.12)',
   },
@@ -61,8 +71,8 @@ const FAULT_CONFIGS = [
     key: 'ingestion_lagging' as const,
     id: 'card-ingestion-lagging',
     title: 'Ingestion Lagging',
-    description: 'Queue depth exceeded 50 — consumer is falling behind the feed.',
-    icon: '⏱️',
+    description: 'Queue depth exceeded 50 — consumer is falling behind.',
+    iconType: 'hourglass' as const,
     color: '#eab308',
     colorDim: 'rgba(234,179,8,0.12)',
   },
@@ -70,8 +80,8 @@ const FAULT_CONFIGS = [
     key: 'data_stale' as const,
     id: 'card-data-stale',
     title: 'Data Stale',
-    description: 'Latest written tick timestamp is more than 30 seconds old.',
-    icon: '🕰️',
+    description: 'Last written tick timestamp is more than 30 seconds old.',
+    iconType: 'clock' as const,
     color: '#a855f7',
     colorDim: 'rgba(168,85,247,0.12)',
   },
@@ -96,15 +106,10 @@ function InfoTip({ text }: { text: string }) {
         className="infotip-btn"
         onClick={() => setOpen(o => !o)}
         aria-label="More info"
-        title="What does this section do?"
       >
-        ℹ
+        <InfoIcon size={11} />
       </button>
-      {open && (
-        <div className="infotip-bubble">
-          {text}
-        </div>
-      )}
+      {open && <div className="infotip-bubble">{text}</div>}
     </div>
   );
 }
@@ -116,88 +121,127 @@ function InfoModal({ onClose }: { onClose: () => void }) {
       <div className="modal-box" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <h2>About this project</h2>
-          <button className="modal-close" onClick={onClose} aria-label="Close">✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="Close">
+            <XIcon size={16} />
+          </button>
         </div>
         <div className="modal-body">
           <p className="modal-lead">
-            This is a <strong>market data fault isolation system</strong> — a live demo
-            that shows how a monitoring system can tell apart four completely different
-            failure conditions that would otherwise all look like "the system is down."
+            A simulated market data pipeline you can deliberately break. Each of the four
+            panels tracks a <strong>different failure condition independently</strong> — the goal is to
+            show that when a system goes dark, you can know exactly <em>which layer</em> failed.
           </p>
 
           <h3>The problem it solves</h3>
           <p>
-            In any real-time data pipeline — financial or otherwise — multiple layers
-            can fail independently: the data source goes silent, the database crashes,
-            the consumer falls behind under load, or the data arrives but with corrupted
-            timestamps. A system that only shows a generic red alert is useless on-call.
-            You need to know <em>which layer</em> broke and <em>why</em>.
+            In real-time data pipelines, multiple layers can fail at the same time: the data source
+            goes silent, the database crashes, the consumer falls behind under load, or data arrives
+            with corrupted timestamps. A system that only shows a generic red alert is useless
+            on-call. You need to know <em>which layer</em> broke and <em>why</em>.
           </p>
 
           <h3>What you're looking at</h3>
           <ul>
             <li>
-              <strong>Feed Generator</strong> — a background thread emitting synthetic
-              price ticks for 18 symbols every 500ms, simulating a real-time market feed.
+              <strong>Feed Generator</strong> — a background thread emitting synthetic price ticks
+              for 18 symbols every 500ms, simulating a real-time market feed.
             </li>
             <li>
-              <strong>Ingestion Loop</strong> — an async consumer that drains the tick
-              queue and writes each tick to a PostgreSQL database.
+              <strong>Tick Queue</strong> — an in-process queue between the feed and the consumer.
+              Queue depth is monitored as an independent signal.
             </li>
             <li>
-              <strong>Health Checker</strong> — runs every 3 seconds, evaluating four
-              independent conditions. Each has its own trigger threshold and reason string.
+              <strong>Ingestion Loop</strong> — an async consumer draining the queue and writing
+              each tick to PostgreSQL via asyncpg.
             </li>
             <li>
-              <strong>This dashboard</strong> — polls the backend every 2 seconds and
-              renders the current state with a colour-coded card per fault type.
+              <strong>Health Checker</strong> — runs every 3 seconds, evaluating four independent
+              conditions. Each has its own threshold and reason string.
             </li>
           </ul>
 
           <h3>The four fault states</h3>
           <div className="modal-faults">
-            <div className="modal-fault">
-              <span className="mf-dot" style={{ background: '#f59e0b' }} />
-              <div>
-                <strong>Feed Dead</strong>
-                <span>No tick received in 10 seconds. The data source went silent.</span>
+            {[
+              { color: '#f59e0b', name: 'Feed Dead', desc: 'No tick received in 10s. The data source went silent.' },
+              { color: '#ef4444', name: 'DB Unreachable', desc: 'Primary pool closed. Writes are failing.' },
+              { color: '#eab308', name: 'Ingestion Lagging', desc: 'Queue > 50 items. Consumer cannot keep up.' },
+              { color: '#a855f7', name: 'Data Stale', desc: 'Last tick is 30s+ old. Timestamps are corrupted.' },
+            ].map(f => (
+              <div className="modal-fault" key={f.name}>
+                <span className="mf-dot" style={{ background: f.color }} />
+                <div>
+                  <strong>{f.name}</strong>
+                  <span>{f.desc}</span>
+                </div>
               </div>
-            </div>
-            <div className="modal-fault">
-              <span className="mf-dot" style={{ background: '#ef4444' }} />
-              <div>
-                <strong>DB Unreachable</strong>
-                <span>Primary connection closed. Writes are failing.</span>
-              </div>
-            </div>
-            <div className="modal-fault">
-              <span className="mf-dot" style={{ background: '#eab308' }} />
-              <div>
-                <strong>Ingestion Lagging</strong>
-                <span>Queue &gt; 50 items. Consumer can't keep up with the feed rate.</span>
-              </div>
-            </div>
-            <div className="modal-fault">
-              <span className="mf-dot" style={{ background: '#a855f7' }} />
-              <div>
-                <strong>Data Stale</strong>
-                <span>Last written tick is 30s+ old. Data is arriving but timestamps are corrupted.</span>
-              </div>
-            </div>
+            ))}
           </div>
 
           <h3>How to use it</h3>
           <p>
-            Use the <strong>Fault Injection</strong> panel on the right to trigger any
-            scenario. Each button causes exactly one fault state to activate. The matching
-            green button resolves it — no service restart required. The{' '}
-            <strong>State Transition Log</strong> records every event with a timestamp
-            and the exact reason string from the health checker.
+            Use the <strong>Fault Injection</strong> panel to trigger any scenario. Each button
+            causes exactly one fault state to activate. The matching recovery button resolves
+            it — no service restart required. The <strong>State Transitions</strong> log on the
+            left records every event with a timestamp and the exact reason string.
           </p>
 
           <div className="modal-footer-note">
-            FastAPI · asyncpg · PostgreSQL (Neon) · React · Vite · Deployed on Render + Vercel
+            FastAPI · asyncpg · PostgreSQL (Neon) · React · Vite · Render + Vercel
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── System Status panel ──────────────────────────────────────────────────────
+function SystemStatus({ meta, fetchError }: { meta: StatusPayload['meta']; fetchError: boolean }) {
+  return (
+    <div className="left-panel-section">
+      <div className="section-label">
+        <DatabaseIcon size={11} />
+        System Status
+        <InfoTip text="Live backend metrics polled every 2 seconds. Queue depth and feed mode change colour when they indicate a problem." />
+      </div>
+      <div className="status-stack">
+        {fetchError && (
+          <div className="status-row status-row-error">
+            <span className="status-key">backend</span>
+            <span className="status-val" style={{ color: '#ef4444' }}>unreachable</span>
+          </div>
+        )}
+        <div className="status-row">
+          <span className="status-key">feed mode</span>
+          <span className="status-val" style={{ color: meta.feed_mode !== 'NORMAL' ? '#f59e0b' : 'var(--color-healthy)' }}>
+            {meta.feed_mode}
+          </span>
+        </div>
+        <div className="status-row">
+          <span className="status-key">queue depth</span>
+          <span className="status-val" style={{ color: meta.queue_depth > 50 ? '#eab308' : 'var(--color-healthy)' }}>
+            {meta.queue_depth}
+          </span>
+        </div>
+        <div className="status-row">
+          <span className="status-key">last tick</span>
+          <span className="status-val">{meta.last_tick_received_ago_s.toFixed(1)}s ago</span>
+        </div>
+        <div className="status-row">
+          <span className="status-key">db target</span>
+          <span className="status-val">{meta.db_active}</span>
+        </div>
+        <div className="status-row">
+          <span className="status-key">primary</span>
+          <span className="status-val" style={{ color: meta.primary_up ? '#10b981' : '#ef4444' }}>
+            {meta.primary_up ? 'up' : 'down'}
+          </span>
+        </div>
+        <div className="status-row">
+          <span className="status-key">replica</span>
+          <span className="status-val" style={{ color: meta.replica_up ? '#10b981' : 'var(--text-muted)' }}>
+            {meta.replica_up ? 'up' : 'none'}
+          </span>
         </div>
       </div>
     </div>
@@ -237,9 +281,8 @@ export default function App() {
     return () => clearInterval(id);
   }, [fetchStatus]);
 
-  const anyFault = status
-    ? Object.values(status.fault_states).some((f) => f.active)
-    : false;
+  const anyFault = status ? Object.values(status.fault_states).some(f => f.active) : false;
+  const activeFaultCount = status ? Object.values(status.fault_states).filter(f => f.active).length : 0;
 
   return (
     <div className="app">
@@ -248,14 +291,20 @@ export default function App() {
       <header className="app-header">
         <div className="header-left">
           <div className="header-logo">
-            <span>◈</span>
+            <ShieldIcon size={16} />
           </div>
           <div>
             <h1>Market Fault Isolation</h1>
-            <div className="subtitle">live ingestion pipeline · fault detection demo</div>
+            <div className="subtitle">Injecting and isolating failures in a live data pipeline</div>
           </div>
         </div>
         <div className="header-right">
+          {anyFault && (
+            <span className="active-fault-badge">
+              <span className="fault-badge-dot" />
+              {activeFaultCount} fault{activeFaultCount > 1 ? 's' : ''} active
+            </span>
+          )}
           {fetchError && (
             <span className="backend-error-badge">backend unreachable</span>
           )}
@@ -266,7 +315,7 @@ export default function App() {
             title="About this project"
             aria-label="About"
           >
-            ℹ
+            <InfoIcon size={15} />
           </button>
           <button
             className="icon-btn"
@@ -275,7 +324,7 @@ export default function App() {
             title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
             aria-label="Toggle theme"
           >
-            {darkMode ? '☀️' : '🌙'}
+            {darkMode ? <SunIcon size={15} /> : <MoonIcon size={15} />}
           </button>
           <div
             className={`status-dot ${fetchError || anyFault ? 'error' : ''}`}
@@ -295,138 +344,69 @@ export default function App() {
             </div>
           </div>
         ) : (
-          <>
-            {/* ── Intro banner ── */}
-            <div className="intro-banner">
-              <div className="intro-text">
-                <span className="intro-highlight">What this is:</span> A simulated
-                data pipeline you can deliberately break. Each panel tracks a different
-                failure condition independently — trigger one from the right panel and
-                watch the system identify exactly which layer failed.
+          <div className="page-grid">
+
+            {/* ── LEFT sticky panel ── */}
+            <aside className="col-left">
+              <SystemStatus meta={status.meta} fetchError={fetchError} />
+              <div className="left-panel-section left-panel-timeline">
+                <div className="section-label">
+                  <ActivityIcon size={11} />
+                  State Transitions
+                  <InfoTip text="Every time a fault activates or clears, one entry is appended here with a UTC timestamp and the exact reason string from the health checker. Resets on service restart." />
+                </div>
+                <Timeline history={status.history} />
               </div>
-              <div className="intro-tags">
-                <span className="tag">Python / FastAPI</span>
-                <span className="tag">PostgreSQL</span>
-                <span className="tag">React / Vite</span>
-                <span className="tag">Reliability Engineering</span>
-              </div>
+            </aside>
+
+            {/* ── MAIN column ── */}
+            <div className="col-main">
+
+              {/* Health Checks */}
+              <section>
+                <div className="section-label">
+                  <ShieldIcon size={11} />
+                  Health Checks
+                  <InfoTip text="Four independent checks run every 3 seconds. Each has its own condition and threshold — a green card means that specific fault is not present, even if other faults are active simultaneously." />
+                </div>
+                <div className="fault-grid">
+                  {FAULT_CONFIGS.map(cfg => (
+                    <FaultStateCard
+                      key={cfg.key}
+                      id={cfg.id}
+                      title={cfg.title}
+                      description={cfg.description}
+                      iconType={cfg.iconType}
+                      color={cfg.color}
+                      colorDim={cfg.colorDim}
+                      fault={status.fault_states[cfg.key]}
+                    />
+                  ))}
+                </div>
+              </section>
+
+              {/* Pipeline Diagram */}
+              <section>
+                <div className="section-label">
+                  <ActivityIcon size={11} />
+                  Data Flow
+                  <InfoTip text="Shows the live path a price tick takes from the feed generator through the queue, ingestion loop, and into PostgreSQL. Each node and connector highlights its fault colour when that layer has an active fault." />
+                </div>
+                <PipelineFlow faults={status.fault_states} meta={status.meta} />
+              </section>
+
+              {/* Fault Injection */}
+              <section>
+                <div className="section-label">
+                  <BoltIcon size={11} />
+                  Fault Injection
+                  <InfoTip text="Trigger any failure scenario without touching the terminal. Each destructive button causes exactly one fault state to activate. Recovery buttons resolve it — no service restart needed." />
+                </div>
+                <ControlPanel />
+              </section>
+
             </div>
-
-            {/* ── Two-column layout ── */}
-            <div className="page-columns">
-
-              {/* LEFT — fault cards, pipeline, timeline */}
-              <div className="col-main">
-
-                <div>
-                  <div className="section-label">
-                    Fault States
-                    <InfoTip text="Four independent health checks run every 3 seconds. Each has its own condition — a green card means that specific fault is not present, even if other faults are active at the same time." />
-                  </div>
-                  <div className="fault-grid">
-                    {FAULT_CONFIGS.map((cfg) => (
-                      <FaultStateCard
-                        key={cfg.key}
-                        id={cfg.id}
-                        title={cfg.title}
-                        description={cfg.description}
-                        icon={cfg.icon}
-                        color={cfg.color}
-                        colorDim={cfg.colorDim}
-                        fault={status.fault_states[cfg.key]}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="section-label">
-                    Pipeline Flow
-                    <InfoTip text="Shows the live path a price tick takes from the market feed through the queue, ingestion loop, and into the database. Each node highlights its fault colour when that layer has an active fault." />
-                  </div>
-                  <PipelineFlow
-                    faults={status.fault_states}
-                    meta={status.meta}
-                  />
-                </div>
-
-                <div>
-                  <div className="section-label">
-                    State Transition Log
-                    <InfoTip text="Every time a fault activates or clears, one entry is appended here with a UTC timestamp and the exact reason string from the health checker. Resets on service restart." />
-                  </div>
-                  <Timeline history={status.history} />
-                </div>
-
-              </div>
-
-              {/* RIGHT SIDEBAR — system status + fault injection */}
-              <div className="col-sidebar">
-
-                <div className="sidebar-section">
-                  <div className="section-label">
-                    System Status
-                    <InfoTip text="Live stats polled from the backend every 2 seconds. Queue depth and feed mode change colour when they indicate a problem." />
-                  </div>
-                  <div className="status-stack">
-                    <div className="status-row">
-                      <span className="status-key">queue depth</span>
-                      <span
-                        className="status-val"
-                        style={{ color: status.meta.queue_depth > 50 ? '#eab308' : 'var(--color-healthy)' }}
-                      >
-                        {status.meta.queue_depth}
-                      </span>
-                    </div>
-                    <div className="status-row">
-                      <span className="status-key">feed mode</span>
-                      <span
-                        className="status-val"
-                        style={{ color: status.meta.feed_mode !== 'NORMAL' ? '#f59e0b' : 'var(--color-healthy)' }}
-                      >
-                        {status.meta.feed_mode}
-                      </span>
-                    </div>
-                    <div className="status-row">
-                      <span className="status-key">db write target</span>
-                      <span className="status-val">{status.meta.db_active}</span>
-                    </div>
-                    <div className="status-row">
-                      <span className="status-key">primary</span>
-                      <span
-                        className="status-val"
-                        style={{ color: status.meta.primary_up ? '#10b981' : '#ef4444' }}
-                      >
-                        {status.meta.primary_up ? 'up' : 'down'}
-                      </span>
-                    </div>
-                    <div className="status-row">
-                      <span className="status-key">replica</span>
-                      <span
-                        className="status-val"
-                        style={{ color: status.meta.replica_up ? '#10b981' : 'var(--text-muted)' }}
-                      >
-                        {status.meta.replica_up ? 'up' : 'none'}
-                      </span>
-                    </div>
-                    <div className="status-row">
-                      <span className="status-key">last tick</span>
-                      <span className="status-val">{status.meta.last_tick_received_ago_s}s ago</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="sidebar-section">
-                  <div className="section-label">
-                    Fault Injection
-                    <InfoTip text="Trigger any failure scenario without touching the terminal. Red buttons cause exactly one fault state to activate. Green buttons resolve it — no service restart needed." />
-                  </div>
-                  <ControlPanel />
-                </div>
-
-              </div>
-            </div>
-          </>
+          </div>
         )}
       </main>
 
