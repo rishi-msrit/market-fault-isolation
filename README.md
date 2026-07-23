@@ -2,9 +2,9 @@
 
 **[Live Demo](https://market-fault-isolation.vercel.app)** · **[Backend API](https://market-fault-isolation-backend.onrender.com/docs)** · **[GitHub](https://github.com/rishi-msrit/market-fault-isolation)**
 
-> ⚠️ The backend runs on Render's free tier and sleeps after 15 minutes of inactivity. First load may take 30–60 seconds to wake up — this is normal. The dashboard shows a spinner while it connects.
+> ⚠️ The backend runs on Render's free tier and sleeps after 15 minutes of inactivity. First load may take 30–60 seconds to wake up, this is normal. The dashboard shows a spinner while it connects.
 
-A simulated stock-price ingestion pipeline built to demonstrate **fault isolation**: detecting and distinguishing four different failure conditions independently, rather than collapsing them into a single "system down" alert. This is the core problem in real financial data infrastructure — when a dashboard goes dark, you need to know *why* immediately.
+A simulated stock-price ingestion pipeline built to demonstrate **fault isolation**: detecting and distinguishing four different failure conditions independently, rather than collapsing them into a single "system down" alert. This is the core problem in real financial data infrastructure when a dashboard goes dark, you need to know *why* immediately.
 
 ## What you see on the live site
 
@@ -12,7 +12,7 @@ When you open the deployed dashboard, you see a dark-themed monitoring interface
 
 **When everything is healthy**, all four panels show a green "OK" badge, the pipeline diagram shows animated flow lines connecting each stage, and the timeline at the bottom is empty (no faults have occurred).
 
-**When you trigger a fault** using the "Fault Injection" control panel on the right, one of the four panels immediately lights up with a distinct color, shows the exact reason the fault fired, and the timeline logs the transition with a timestamp. When you resolve the fault, the panel goes back to green — without restarting anything.
+**When you trigger a fault** using the "Fault Injection" control panel on the right, one of the four panels immediately lights up with a distinct color, shows the exact reason the fault fired, and the timeline logs the transition with a timestamp. When you resolve the fault, the panel goes back to green without restarting anything.
 
 The point of the demo is not just to see errors. It is to show that the system *knows which error it has* and reports them separately, even when multiple faults happen at once.
 
@@ -24,7 +24,7 @@ This project simulates exactly that scenario at a small scale:
 - A fake "market feed" generates price updates for 18 stock symbols every half second
 - A backend service picks up those updates and writes them to a database
 - A health checker runs every 3 seconds, checking each layer separately
-- A dashboard shows you exactly which part is broken — with a reason — when you deliberately break it
+- A dashboard shows you exactly which part is broken; with a reason when you deliberately break it
 
 You can trigger four real-world failures from the control panel:
 1. **Kill the feed** — the data source stops sending anything
@@ -36,7 +36,7 @@ Each failure lights up a different coloured panel with a plain-English explanati
 
 ## What problem this solves
 
-In production market-data systems, multiple things can go wrong simultaneously or in sequence: the upstream feed dies, the write database becomes unavailable, the consumer falls behind under load, or data arrives but with stale timestamps (a clock-drift or corruption issue). A system that only reports "unhealthy" is operationally useless — an engineer on-call needs to know within seconds which layer is the source of the fault.
+In production market-data systems, multiple things can go wrong simultaneously or in sequence: the upstream feed dies, the write database becomes unavailable, the consumer falls behind under load, or data arrives but with stale timestamps (a clock-drift or corruption issue). A system that only reports "unhealthy" is operationally useless an engineer on-call needs to know within seconds which layer is the source of the fault.
 
 This project implements exactly that separation. Each of the four states below is computed by an independent check, has its own trigger condition, its own visual indicator on the dashboard, and logs a timestamped reason when it transitions.
 
@@ -49,7 +49,7 @@ This project implements exactly that separation. Each of the four states below i
 | **Ingestion Lagging** | Feed and DB are both healthy, but the tick queue exceeds 50 items | Yellow |
 | **Data Stale** | Last written tick timestamp is older than 30 seconds (feed up, DB up) | Purple |
 
-All four are evaluated every 3 seconds by the health checker. Each transitions independently — they do not mask each other. The dashboard shows a distinct color and reason string for each one.
+All four are evaluated every 3 seconds by the health checker. Each transitions independently they do not mask each other. The dashboard shows a distinct color and reason string for each one.
 
 ## Architecture
 
@@ -75,7 +75,7 @@ All four are evaluated every 3 seconds by the health checker. Each transitions i
 
 **Local dev**: Primary and replica are separate `postgres:16` containers connected via WAL streaming replication. When the primary is killed, the health checker detects the failed connection, calls `pg_promote()` on the replica, and switches the write target.
 
-**Deployed**: Single Postgres instance (Neon free tier). The failover logic still executes — the pool is closed and restored — but there is no physical replica to promote. Documented in Known Limitations.
+**Deployed**: Single Postgres instance (Neon free tier). The failover logic still executes — the pool is closed and restored but there is no physical replica to promote. Documented in Known Limitations.
 
 ## Tech stack
 
